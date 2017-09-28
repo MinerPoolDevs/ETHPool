@@ -1,0 +1,34 @@
+pipeline:
+  build:
+    image: golang:latest
+    commands:
+      - make
+
+  stop:
+    image: appleboy/drone-ssh
+    host: eth.minerpool.co
+    username: ubuntu
+    key: ${SSH_KEY}
+    secrets: [ SSH_KEY ]
+    command_timeout: 600
+    script:
+      - sudo /bin/systemctl stop oepool oeapi oepayout oeunlock || true
+
+  copy:
+    image: appleboy/drone-scp
+    host: eth.minerpool.co
+    username: ubuntu
+    key: ${SSH_KEY}
+    secrets: [ SSH_KEY ]
+    target: /mnt/open-ethereum-pool-master/
+    source: build/bin/open-ethereum-pool
+
+  start:
+    image: appleboy/drone-ssh
+    host: eth.minerpool.co
+    username: ubuntu
+    key: ${SSH_KEY}
+    secrets: [ SSH_KEY ]
+    command_timeout: 600
+    script:
+      - sudo /bin/systemctl start oepool oeapi oepayout oeunlock
